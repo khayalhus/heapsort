@@ -1,36 +1,51 @@
-#include<iostream> // cout
-#include<fstream> // ifstream
-#include<time.h> // clock_t, clock, CLOCKS_PER_SEC
-#include<math.h> // pow, sqrt
+#include <iostream> // cout
+#include <fstream> // ifstream
+#include <time.h> // clock_t, clock, CLOCKS_PER_SEC
+#include <math.h> // pow, sqrt
+#include <string> // getline
+#include <stdlib.h> // srand, rand
+#include <time.h> // time
+#include <vector> // vector
+#include <algorithm> // swap
 
 using namespace std;
 
-class Taxi {
+class PQ {
+private:
+	vector<float> heap; // holds taxi distances in heap data structure
 public:
-	float longitude;
-	float latitude;
-	float distance;
-
-	Taxi() {}
-	~Taxi() {}
-	void calculateDistance(); // Euclidian distance
-	void updateDistance(float longitude, float latitude); // updates variables and calls calculateDistance()
+	PQ() {}
+	~PQ() {}
+	void addTaxi(float longitude, float latitude); // adds taxi to the heap
+	float calculateDistance(float longitude, float latitude); // Euclidian distance
+	void updateDistance(int key, float subtrahend); // updates variables and calls calculateDistance()
+	int getSize(); // returns size of heap data struct
 };
 
-void Taxi::calculateDistance() {
-	this->distance = sqrt(pow(this->longitude, 2) + pow(this->latitude, 2));
+void PQ::addTaxi(float longitude, float latitude) {
+	// add new taxi's distance to the end of heap
+	this->heap.push_back(calculateDistance(longitude, latitude));
 }
 
-void Taxi::updateDistance(float longitude, float latitude) {
-	this->longitude = longitude;
-	this->latitude = latitude;
-	calculateDistance();
+int PQ::getSize() {
+	return this->heap.size(); // return heap size
+}
+
+float PQ::calculateDistance(float longitude, float latitude) {
+	float distance = sqrt(pow(longitude, 2) + pow(latitude, 2));
+	return distance; // calculate and return Euclidian distance
+}
+
+void PQ::updateDistance(int key, float subtrahend) { // should be between 0 and 1
+	this->heap[key] -= subtrahend; // reduce distance by subtrahend
 }
 
 int main(int argc, char** argv){
 	clock_t time_elapsed; // used for storing total running time
 
 	time_elapsed = clock();
+
+	srand(time(NULL)); // seed randomization with time
 
     int m;
 	float p;
@@ -50,6 +65,8 @@ int main(int argc, char** argv){
 		cout << "Automatically setting m as 100 and p as 0.1" << endl;
 	}
 
+	// simulation starts
+
 	ifstream file;
 	file.open("locations.txt");
 	
@@ -58,23 +75,47 @@ int main(int argc, char** argv){
 		exit(1);
 	}
 
+	PQ * queue = new PQ;
+
 	string line;
 	
 	getline(file, line); //this is the header line
 
 	string header = line;
-	
-	// should arrays be used when the size is changing?
 
-	file >> line; //longitude (float)
-    // = stof(line)
-	// somehow store read variable
-	file >> line; //latitude (float)
-    // = stof(line)
-	// somehow store read variable
-	getline(file, line, '\n'); //this is for reading the \n character into dummy variable.
-	
+	bool mode; // determines whether simulation should add or update (true = update, false = add)
 
+	int num_of_taxi_additions = 0;
+	int num_of_distance_updates = 0;
+
+	for (int i = 0; i < m; i++) { // do m amount of operations
+		if(i == 100) { // after every 100 operations, 101th operation is a remove operation
+			// remove taxi
+			// print removed taxi
+		} else {
+			mode = (rand() % 100) < (p * 100);
+			if(mode == true) {
+				// update taxi (distance = distance * 0.1)
+				num_of_distance_updates++;
+
+				queue->updateDistance(rand() % queue->getSize(), 0.01); // reduce a random taxi's distance by 0.01
+			} else {
+				// add taxi
+				num_of_taxi_additions++;
+				
+				float longitude, latitude;
+				file >> longitude;
+				file >> latitude;
+				getline(file, line, '\n'); //this is for reading the \n character into dummy variable.
+
+				queue->addTaxi(longitude, latitude);
+			}
+		}
+	}
+
+	// simulation ends
+	cout << "Number of taxi additions: " << num_of_taxi_additions << endl;
+	cout << "Number of distance updates: " << num_of_distance_updates << endl;
     cout << "The total running time of the program was " << ( ( (float) time_elapsed ) / (CLOCKS_PER_SEC / 1000) ) << " milliseconds." << endl;
 
 }

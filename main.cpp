@@ -20,12 +20,11 @@ public:
 	~PQ() {}
 	void addTaxi(long double longitude, long double latitude); // adds taxi to the heap
 	long double calculateDistance(long double longitude, long double latitude); // Euclidian distance
-	void updateDistance(int index, long double subtrahend); // updates variables and calls calculateDistance()
 	int getSize(); // returns size of heap data struct
 	void min_heapify(int index); // heapify the interior node
 	//void build_min_heap(); // heapify all interior nodes
 	long double extract_min(); // extract head node (which is closest) and return its distance
-	void decrease_key(int index, long double key);
+	void decrease_distance(int index, long double key);
 	long double getKey(int index);
 };
 
@@ -37,7 +36,7 @@ int PQ::getParentIndex(int index) {
 	return (index-1) / 2;
 }
 
-void PQ::decrease_key(int index, long double key) {
+void PQ::decrease_distance(int index, long double key) {
 	if (key > this->heap[index]) {
 		cout << "New key is bigger than the value" << endl;
 		return;
@@ -83,7 +82,7 @@ void PQ::addTaxi(long double longitude, long double latitude) {
 	// add new taxi's distance to the end of heap
 	long double key = calculateDistance(longitude, latitude); // add new taxi to the end
 	this->heap.push_back(numeric_limits<long double>::max());
-	this->decrease_key(this->getSize() - 1, key);
+	this->decrease_distance(this->getSize() - 1, key);
 	//min_heapify(this->getSize() - 1); // swap it into its correct place
 }
 
@@ -145,8 +144,8 @@ int main(int argc, char** argv){
 	int num_of_taxi_additions = 0;
 	int num_of_distance_updates = 0;
 
-	for (int i = 0; i < m; i++) { // do m amount of operations
-		if(i % 100 == 0 && i != 0) { // after every 100 operations, 101th operation is a remove operation
+	for (int i = 1; i <= m; i++) { // do m amount of operations
+		if(i % 102 == 0 && i != 0) { // after every 100 operations, 101th operation is a remove operation
 			try {
 				long double taxi_distance = queue->extract_min(); // remove taxi
 				cout << "Distance of the removed taxi: " << taxi_distance << endl; // print removed taxi
@@ -157,7 +156,7 @@ int main(int argc, char** argv){
 		} else {
 			mode = (rand() % 100) < (p * 100);
 			if(mode == true) {
-				// update taxi (distance = distance * 0.1)
+				// update taxi (distance = distance - 0.01)
 				if(queue->getSize() == 0) {
                     //cout << "Can't update non-existent taxi" << endl;
                     continue;
@@ -166,9 +165,9 @@ int main(int argc, char** argv){
 				int index = rand() % queue->getSize(); // randomly choose a node
 				long double reduced_value = queue->getKey(index) - 0.01;
 				if(reduced_value <= 0.0) {
-					queue->decrease_key(index, queue->getKey(index) - 0.0); // distance can't be negative so reduce a random taxi's distance to 0.0
+					queue->decrease_distance(index, queue->getKey(index) - 0.0); // distance can't be negative so reduce a random taxi's distance to 0.0
 				} else {
-					queue->decrease_key(index, reduced_value); // reduce a random taxi's distance by 0.01
+					queue->decrease_distance(index, reduced_value); // reduce a random taxi's distance by 0.01
 				}
 			} else {
 				// add taxi
@@ -183,6 +182,10 @@ int main(int argc, char** argv){
 			}
 		}
 	}
+
+	delete queue;
+
+	time_elapsed = clock() - time_elapsed;
 
 	// simulation ends
 	cout << "Number of taxi additions: " << num_of_taxi_additions << endl;

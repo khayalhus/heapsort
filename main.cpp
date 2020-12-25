@@ -9,6 +9,9 @@
 #include <algorithm> // swap
 #include <limits> // numeric_limits<float>::max()
 
+#define HOTEL_LONGITUDE 33.40819
+#define HOTEL_LATITUDE 39.19001
+
 using namespace std;
 
 class PQ {
@@ -91,7 +94,7 @@ int PQ::getSize() {
 }
 
 long double PQ::calculateDistance(long double longitude, long double latitude) {
-	long double distance = sqrtl(powl(longitude, 2) + powl(latitude, 2));
+	long double distance = sqrtl(powl(longitude - HOTEL_LONGITUDE, 2) + powl(latitude - HOTEL_LATITUDE, 2));
 	return distance; // calculate and return Euclidian distance
 }
 
@@ -143,12 +146,13 @@ int main(int argc, char** argv){
 
 	int num_of_taxi_additions = 0;
 	int num_of_distance_updates = 0;
-
+	//int num_of_removals = 0;
 	for (int i = 1; i <= m; i++) { // do m amount of operations
-		if(i % 102 == 0 && i != 0) { // after every 100 operations, 101th operation is a remove operation
+		if(i % 102 == 0 && i != 0) { // after every 100 add or decrease operation, 101th operation is a remove operation
 			try {
 				long double taxi_distance = queue->extract_min(); // remove taxi
 				cout << "Distance of the removed taxi: " << taxi_distance << endl; // print removed taxi
+				//num_of_removals++;
 			}
     		catch (const char* result) {
         		//cout << result << endl;
@@ -165,7 +169,7 @@ int main(int argc, char** argv){
 				int index = rand() % queue->getSize(); // randomly choose a node
 				long double reduced_value = queue->getKey(index) - 0.01;
 				if(reduced_value <= 0.0) {
-					queue->decrease_distance(index, queue->getKey(index) - 0.0); // distance can't be negative so reduce a random taxi's distance to 0.0
+					queue->decrease_distance(index, 0.0); // distance can't be negative so reduce a random taxi's distance to 0.0
 				} else {
 					queue->decrease_distance(index, reduced_value); // reduce a random taxi's distance by 0.01
 				}
@@ -188,6 +192,7 @@ int main(int argc, char** argv){
 	time_elapsed = clock() - time_elapsed;
 
 	// simulation ends
+	//cout << "Number of taxi removals: " << num_of_removals << endl;
 	cout << "Number of taxi additions: " << num_of_taxi_additions << endl;
 	cout << "Number of distance updates: " << num_of_distance_updates << endl;
     cout << "The total running time of the program was " << ( ( (float) time_elapsed ) / (CLOCKS_PER_SEC / 1000) ) << " milliseconds." << endl;
